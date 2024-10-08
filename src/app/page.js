@@ -14,7 +14,7 @@ import { Toggle } from "@radix-ui/react-toggle";
 const CodeTimeline = () => {
   const [codeInput, setCodeInput] = useState("");
   const [timelineData, setTimelineData] = useState([]);
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(true);
   const timelineRef = useRef(null);
   const [elementTypes, setElementTypes] = useState({
     keyword: "#FF6B6B", // Soft Red
