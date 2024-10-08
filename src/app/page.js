@@ -4,11 +4,16 @@ import React, { useState, useRef } from "react";
 import { Moon, Sun, Download } from "lucide-react";
 import html2canvas from "html2canvas";
 import { Switch } from "@radix-ui/react-switch";
+import AceEditor from "react-ace";
+
+import "ace-builds/src-noconflict/mode-dart";
+import "ace-builds/src-noconflict/theme-dracula";
+import "ace-builds/src-noconflict/ext-language_tools";
 
 const CodeTimeline = () => {
   const [codeInput, setCodeInput] = useState("");
   const [timelineData, setTimelineData] = useState([]);
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(true);
   const timelineRef = useRef(null);
 
   const elementTypes = {
@@ -114,8 +119,7 @@ const CodeTimeline = () => {
       .filter((line) => line.segments.length > 0);
   };
 
-  const handleInputChange = (e) => {
-    const newCode = e.target.value;
+  const handleInputChange = (newCode) => {
     setCodeInput(newCode);
     setTimelineData(generateTimelineFromCode(newCode));
   };
@@ -126,7 +130,21 @@ const CodeTimeline = () => {
 
   const exportImage = async () => {
     if (timelineRef.current) {
-      const canvas = await html2canvas(timelineRef.current);
+      const clone = timelineRef.current.cloneNode(true);
+
+      document.body.appendChild(clone);
+
+      const { scrollWidth, scrollHeight } = clone;
+
+      const canvas = await html2canvas(clone, {
+        width: 922,
+        height: scrollHeight,
+        backgroundColor: darkMode ? "#2D2D2D" : "#FFFFFF",
+        scale: window.devicePixelRatio,
+      });
+
+      document.body.removeChild(clone);
+
       const image = canvas
         .toDataURL("image/png")
         .replace("image/png", "image/octet-stream");
@@ -175,18 +193,35 @@ const CodeTimeline = () => {
         </div>
       </div>
 
-      {/* Main Content - Side by Side Layout */}
+      <h3
+        className={`text-md font-semibold mb-3 ${
+          darkMode ? "text-gray-400" : "text-gray-800"
+        }`}
+      >
+        See your code come to life!
+      </h3>
+
       <div className="flex gap-6 h-[calc(100vh-8rem)]">
         {/* Left Side - Code Input */}
         <div className="w-1/2 flex flex-col">
-          <textarea
-            className={`flex-1 p-4 rounded-lg font-mono text-sm resize-none ${
-              darkMode
-                ? "bg-gray-800 text-white border-gray-700"
-                : "bg-white text-gray-800 border-gray-200"
-            } border`}
+          <AceEditor
             placeholder="Paste your code here..."
+            theme="dracula"
             value={codeInput}
+            mode={"dart"}
+            width="100%"
+            showPrintMargin={false}
+            showGutter={false}
+            highlightActiveLine={false}
+            height="100%"
+            setOptions={{
+              fontSize: "16px",
+            }}
+            className={
+              darkMode
+                ? "bg-gray-800 text-gray-300"
+                : "bg-white text-gray-800 border"
+            }
             onChange={handleInputChange}
           />
         </div>
