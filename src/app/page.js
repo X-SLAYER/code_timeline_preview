@@ -156,18 +156,18 @@ const CodeTimeline = () => {
     }
   };
 
-  useEffect(() => {
-    const darkModeSetting = localStorage.getItem("darkMode");
-    const isDarkMode = darkModeSetting === "true" || darkModeSetting === null;
-    setDarkMode(isDarkMode);
+  // useEffect(() => {
+  //   const darkModeSetting = localStorage.getItem("darkMode");
+  //   const isDarkMode = darkModeSetting === "true" || darkModeSetting === null;
+  //   setDarkMode(isDarkMode);
 
-    setElementTypes((prev) => ({
-      ...prev,
-      operator: !isDarkMode ? "#FFD93D" : "#FFD700",
-      default: !isDarkMode ? "#E0E0E0" : "#424242",
-    }));
-    setTimelineData(generateTimelineFromCode(codeInput));
-  }, [codeInput, darkMode]);
+  //   setElementTypes((prev) => ({
+  //     ...prev,
+  //     operator: !isDarkMode ? "#FFD93D" : "#FFD700",
+  //     default: !isDarkMode ? "#E0E0E0" : "#424242",
+  //   }));
+  //   setTimelineData(generateTimelineFromCode(codeInput));
+  // }, [codeInput, darkMode]);
 
   return (
     <div className={`p-6 h-screen ${darkMode ? "bg-gray-900" : "bg-gray-50"}`}>
@@ -180,7 +180,7 @@ const CodeTimeline = () => {
           Code Timeline Visualizer
         </h2>
         <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2">
+          {/* <div className="flex items-center space-x-2">
             <Toggle onClick={toggleDarkMode}>
               {darkMode ? (
                 <Sun className={`h-4 w-4 ${"text-gray-400"}`} />
@@ -188,7 +188,7 @@ const CodeTimeline = () => {
                 <Moon className={`h-4 w-4 ${"text-gray-600"}`} />
               )}
             </Toggle>
-          </div>
+          </div> */}
           <button
             onClick={exportImage}
             className={`p-2 rounded-full ${
