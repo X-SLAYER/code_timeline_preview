@@ -16,12 +16,13 @@ const CodeTimeline = () => {
   const [darkMode, setDarkMode] = useState(true);
   const timelineRef = useRef(null);
 
+  // i tried to match dracula theme colors
   const elementTypes = {
     keyword: "#FF6B6B", // Soft Red
     class: "#4ECDC4", // Teal
     function: "#45B7D1", // Sky Blue
     variable: "#96CEB4", // Sage Green
-    operator: "#FFD93D", // Soft Yellow
+    operator: darkMode ? "#FFD93D" : "#FFD700", // Soft yellow
     string: "#FF8C42", // Soft Orange
     number: "#6A0572", // Deep Purple
     boolean: "#FF4081", // Pink
@@ -157,7 +158,6 @@ const CodeTimeline = () => {
 
   return (
     <div className={`p-6 h-screen ${darkMode ? "bg-gray-900" : "bg-gray-50"}`}>
-      {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <h2
           className={`text-xl font-semibold ${
@@ -202,7 +202,6 @@ const CodeTimeline = () => {
       </h3>
 
       <div className="flex gap-6 h-[calc(100vh-8rem)]">
-        {/* Left Side - Code Input */}
         <div className="w-1/2 flex flex-col">
           <AceEditor
             placeholder="Paste your code here..."
@@ -226,7 +225,6 @@ const CodeTimeline = () => {
           />
         </div>
 
-        {/* Right Side - Timeline Preview */}
         <div className="w-1/2 flex flex-col">
           <div
             ref={timelineRef}
@@ -264,7 +262,6 @@ const CodeTimeline = () => {
             </div>
           </div>
 
-          {/* Legend */}
           <div
             className={`mt-4 p-4 rounded-lg border ${
               darkMode
