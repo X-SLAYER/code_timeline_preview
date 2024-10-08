@@ -1,101 +1,266 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import React, { useState, useRef } from "react";
+import { Moon, Sun, Download } from "lucide-react";
+import html2canvas from "html2canvas";
+import { Switch } from "@radix-ui/react-switch";
+
+const CodeTimeline = () => {
+  const [codeInput, setCodeInput] = useState("");
+  const [timelineData, setTimelineData] = useState([]);
+  const [darkMode, setDarkMode] = useState(false);
+  const timelineRef = useRef(null);
+
+  const elementTypes = {
+    keyword: "#FF6B6B", // Soft Red
+    class: "#4ECDC4", // Teal
+    function: "#45B7D1", // Sky Blue
+    variable: "#96CEB4", // Sage Green
+    operator: "#FFD93D", // Soft Yellow
+    string: "#FF8C42", // Soft Orange
+    number: "#6A0572", // Deep Purple
+    boolean: "#FF4081", // Pink
+    comment: "#78909C", // Blue Grey
+    import: "#26A69A", // Green Teal
+    decorator: "#BA68C8", // Light Purple
+    punctuation: "#B0BEC5", // Light Blue Grey
+    bracket: "#00BCD4", // Cyan
+    property: "#8BC34A", // Light Green
+    space: "transparent",
+    default: darkMode ? "#E0E0E0" : "#424242", // Light Grey / Dark Grey
+  };
+
+  const keywords = [
+    "class",
+    "function",
+    "const",
+    "let",
+    "var",
+    "if",
+    "else",
+    "for",
+    "while",
+    "return",
+    "import",
+    "from",
+    "async",
+    "await",
+    "try",
+    "catch",
+    "throw",
+    "new",
+    "this",
+    "super",
+  ];
+
+  const tokenizeLine = (line) => {
+    const tokens = line.split(/(\s+|[{}()[\],;.])/);
+
+    return tokens
+      .map((token) => {
+        if (!token) return null;
+
+        let color = elementTypes.default;
+        let width = token.length * 8;
+
+        if (token.trim() === "") {
+          return {
+            text: token,
+            color: elementTypes.space,
+            width: token.length * 8,
+          };
+        }
+
+        if (keywords.includes(token)) {
+          color = elementTypes.keyword;
+        } else if (token.match(/^[A-Z][a-zA-Z0-9]*$/)) {
+          color = elementTypes.class;
+        } else if (token.match(/^[a-z][a-zA-Z0-9]*(?=\()/)) {
+          color = elementTypes.function;
+        } else if (token.match(/^[a-z][a-zA-Z0-9]*$/)) {
+          color = elementTypes.variable;
+        } else if (token.match(/[+\-*/%=<>!&|^~]/)) {
+          color = elementTypes.operator;
+        } else if (token.match(/^(['"]).*\1$/)) {
+          color = elementTypes.string;
+        } else if (token.match(/^\d+$/)) {
+          color = elementTypes.number;
+        } else if (token === "true" || token === "false") {
+          color = elementTypes.boolean;
+        } else if (token.startsWith("//")) {
+          color = elementTypes.comment;
+        } else if (token === "import" || token === "from") {
+          color = elementTypes.import;
+        } else if (token.startsWith("@")) {
+          color = elementTypes.decorator;
+        } else if (token.match(/[{}()[\]]/)) {
+          color = elementTypes.bracket;
+        } else if (token.match(/[.,;]/)) {
+          color = elementTypes.punctuation;
+        }
+
+        return { text: token, color, width };
+      })
+      .filter(Boolean);
+  };
+
+  const generateTimelineFromCode = (code) => {
+    const lines = code.split("\n");
+    return lines
+      .map((line, index) => ({
+        id: index + 1,
+        segments: tokenizeLine(line),
+      }))
+      .filter((line) => line.segments.length > 0);
+  };
+
+  const handleInputChange = (e) => {
+    const newCode = e.target.value;
+    setCodeInput(newCode);
+    setTimelineData(generateTimelineFromCode(newCode));
+  };
+
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);
+  };
+
+  const exportImage = async () => {
+    if (timelineRef.current) {
+      const canvas = await html2canvas(timelineRef.current);
+      const image = canvas
+        .toDataURL("image/png")
+        .replace("image/png", "image/octet-stream");
+      const link = document.createElement("a");
+      link.download = "code-timeline.png";
+      link.href = image;
+      link.click();
+    }
+  };
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.js
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+    <div className={`p-6 h-screen ${darkMode ? "bg-gray-900" : "bg-gray-50"}`}>
+      {/* Header */}
+      <div className="flex justify-between items-center mb-4">
+        <h2
+          className={`text-xl font-semibold ${
+            darkMode ? "text-white" : "text-gray-800"
+          }`}
+        >
+          Code Timeline Visualizer
+        </h2>
+        <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
+            <Sun
+              className={`h-4 w-4 ${
+                darkMode ? "text-gray-400" : "text-gray-600"
+              }`}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            <Switch checked={darkMode} onCheckedChange={toggleDarkMode} />
+            <Moon
+              className={`h-4 w-4 ${
+                darkMode ? "text-gray-400" : "text-gray-600"
+              }`}
+            />
+          </div>
+          <button
+            onClick={exportImage}
+            className={`p-2 rounded-full ${
+              darkMode
+                ? "bg-gray-700 hover:bg-gray-600 text-gray-200"
+                : "bg-gray-200 hover:bg-gray-300 text-gray-700"
+            }`}
           >
-            Read our docs
-          </a>
+            <Download className="h-4 w-4" />
+          </button>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+      </div>
+
+      {/* Main Content - Side by Side Layout */}
+      <div className="flex gap-6 h-[calc(100vh-8rem)]">
+        {/* Left Side - Code Input */}
+        <div className="w-1/2 flex flex-col">
+          <textarea
+            className={`flex-1 p-4 rounded-lg font-mono text-sm resize-none ${
+              darkMode
+                ? "bg-gray-800 text-white border-gray-700"
+                : "bg-white text-gray-800 border-gray-200"
+            } border`}
+            placeholder="Paste your code here..."
+            value={codeInput}
+            onChange={handleInputChange}
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        </div>
+
+        {/* Right Side - Timeline Preview */}
+        <div className="w-1/2 flex flex-col">
+          <div
+            ref={timelineRef}
+            className={`flex-1 overflow-auto rounded-lg p-4 border ${
+              darkMode
+                ? "bg-gray-800 border-gray-700"
+                : "bg-white border-gray-200"
+            }`}
+          >
+            <div className="space-y-2">
+              {timelineData.map((row) => (
+                <div key={row.id} className="flex items-center">
+                  <span
+                    className={`w-8 text-sm font-mono ${
+                      darkMode ? "text-gray-400" : "text-gray-500"
+                    }`}
+                  >
+                    {row.id}
+                  </span>
+                  <div className="flex items-center">
+                    {row.segments.map((segment, segIndex) => (
+                      <div
+                        key={segIndex}
+                        className="h-4 rounded transition-all duration-200 hover:opacity-80 mx-[1px]"
+                        style={{
+                          width: `${segment.width}px`,
+                          backgroundColor: segment.color,
+                        }}
+                        title={segment.text}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Legend */}
+          <div
+            className={`mt-4 p-4 rounded-lg border ${
+              darkMode
+                ? "bg-gray-800 border-gray-700"
+                : "bg-white border-gray-200"
+            }`}
+          >
+            <div className="flex flex-wrap gap-3 text-xs">
+              {Object.entries(elementTypes).map(
+                ([key, color]) =>
+                  key !== "space" &&
+                  key !== "default" && (
+                    <div key={key} className="flex items-center">
+                      <div
+                        className="w-3 h-3 rounded mr-1"
+                        style={{ backgroundColor: color }}
+                      />
+                      <span
+                        className={darkMode ? "text-gray-300" : "text-gray-600"}
+                      >
+                        {key.charAt(0).toUpperCase() + key.slice(1)}
+                      </span>
+                    </div>
+                  )
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
-}
+};
+
+export default CodeTimeline;
