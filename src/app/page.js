@@ -158,7 +158,7 @@ const CodeTimeline = () => {
 
   useEffect(() => {
     const darkModeSetting = localStorage.getItem("darkMode");
-    const isDarkMode = darkModeSetting === "true";
+    const isDarkMode = darkModeSetting === "true" || darkModeSetting === null;
     setDarkMode(isDarkMode);
 
     setElementTypes((prev) => ({
