@@ -167,7 +167,7 @@ const CodeTimeline = () => {
       default: !isDarkMode ? "#E0E0E0" : "#424242",
     }));
     setTimelineData(generateTimelineFromCode(codeInput));
-  }, [darkMode]);
+  }, [codeInput, darkMode]);
 
   return (
     <div className={`p-6 h-screen ${darkMode ? "bg-gray-900" : "bg-gray-50"}`}>
