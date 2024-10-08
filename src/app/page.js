@@ -1,22 +1,27 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Moon, Sun, Download } from "lucide-react";
 import html2canvas from "html2canvas";
-import { Switch } from "@radix-ui/react-switch";
+import AceEditor from "react-ace";
+
+import "ace-builds/src-noconflict/mode-dart";
+import "ace-builds/src-noconflict/theme-dracula";
+import "ace-builds/src-noconflict/theme-github";
+import "ace-builds/src-noconflict/ext-language_tools";
+import { Toggle } from "@radix-ui/react-toggle";
 
 const CodeTimeline = () => {
   const [codeInput, setCodeInput] = useState("");
   const [timelineData, setTimelineData] = useState([]);
   const [darkMode, setDarkMode] = useState(false);
   const timelineRef = useRef(null);
-
-  const elementTypes = {
+  const [elementTypes, setElementTypes] = useState({
     keyword: "#FF6B6B", // Soft Red
     class: "#4ECDC4", // Teal
     function: "#45B7D1", // Sky Blue
     variable: "#96CEB4", // Sage Green
-    operator: "#FFD93D", // Soft Yellow
+    operator: darkMode ? "#FFD93D" : "#FFD700", // Soft yellow
     string: "#FF8C42", // Soft Orange
     number: "#6A0572", // Deep Purple
     boolean: "#FF4081", // Pink
@@ -28,7 +33,7 @@ const CodeTimeline = () => {
     property: "#8BC34A", // Light Green
     space: "transparent",
     default: darkMode ? "#E0E0E0" : "#424242", // Light Grey / Dark Grey
-  };
+  });
 
   const keywords = [
     "class",
@@ -114,19 +119,33 @@ const CodeTimeline = () => {
       .filter((line) => line.segments.length > 0);
   };
 
-  const handleInputChange = (e) => {
-    const newCode = e.target.value;
+  const handleInputChange = (newCode) => {
     setCodeInput(newCode);
     setTimelineData(generateTimelineFromCode(newCode));
   };
 
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
+    localStorage.setItem("darkMode", !darkMode);
   };
 
   const exportImage = async () => {
     if (timelineRef.current) {
-      const canvas = await html2canvas(timelineRef.current);
+      const clone = timelineRef.current.cloneNode(true);
+
+      document.body.appendChild(clone);
+
+      const { scrollWidth, scrollHeight } = clone;
+
+      const canvas = await html2canvas(clone, {
+        width: 922,
+        height: scrollHeight,
+        backgroundColor: darkMode ? "#2D2D2D" : "#FFFFFF",
+        scale: window.devicePixelRatio,
+      });
+
+      document.body.removeChild(clone);
+
       const image = canvas
         .toDataURL("image/png")
         .replace("image/png", "image/octet-stream");
@@ -137,9 +156,21 @@ const CodeTimeline = () => {
     }
   };
 
+  useEffect(() => {
+    const darkModeSetting = localStorage.getItem("darkMode");
+    const isDarkMode = darkModeSetting === "true";
+    setDarkMode(isDarkMode);
+
+    setElementTypes((prev) => ({
+      ...prev,
+      operator: !isDarkMode ? "#FFD93D" : "#FFD700",
+      default: !isDarkMode ? "#E0E0E0" : "#424242",
+    }));
+    setTimelineData(generateTimelineFromCode(codeInput));
+  }, [codeInput, darkMode]);
+
   return (
     <div className={`p-6 h-screen ${darkMode ? "bg-gray-900" : "bg-gray-50"}`}>
-      {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <h2
           className={`text-xl font-semibold ${
@@ -150,17 +181,13 @@ const CodeTimeline = () => {
         </h2>
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-2">
-            <Sun
-              className={`h-4 w-4 ${
-                darkMode ? "text-gray-400" : "text-gray-600"
-              }`}
-            />
-            <Switch checked={darkMode} onCheckedChange={toggleDarkMode} />
-            <Moon
-              className={`h-4 w-4 ${
-                darkMode ? "text-gray-400" : "text-gray-600"
-              }`}
-            />
+            <Toggle onClick={toggleDarkMode}>
+              {darkMode ? (
+                <Sun className={`h-4 w-4 ${"text-gray-400"}`} />
+              ) : (
+                <Moon className={`h-4 w-4 ${"text-gray-600"}`} />
+              )}
+            </Toggle>
           </div>
           <button
             onClick={exportImage}
@@ -175,23 +202,33 @@ const CodeTimeline = () => {
         </div>
       </div>
 
-      {/* Main Content - Side by Side Layout */}
+      <h3
+        className={`text-md font-semibold mb-3 ${
+          darkMode ? "text-gray-400" : "text-gray-800"
+        }`}
+      >
+        See your code come to life!
+      </h3>
+
       <div className="flex gap-6 h-[calc(100vh-8rem)]">
-        {/* Left Side - Code Input */}
         <div className="w-1/2 flex flex-col">
-          <textarea
-            className={`flex-1 p-4 rounded-lg font-mono text-sm resize-none ${
-              darkMode
-                ? "bg-gray-800 text-white border-gray-700"
-                : "bg-white text-gray-800 border-gray-200"
-            } border`}
+          <AceEditor
             placeholder="Paste your code here..."
+            theme={darkMode ? "dracula" : "github"}
             value={codeInput}
+            mode={"dart"}
+            width="100%"
+            showPrintMargin={false}
+            showGutter={false}
+            highlightActiveLine={false}
+            height="100%"
+            setOptions={{
+              fontSize: "16px",
+            }}
             onChange={handleInputChange}
           />
         </div>
 
-        {/* Right Side - Timeline Preview */}
         <div className="w-1/2 flex flex-col">
           <div
             ref={timelineRef}
@@ -229,7 +266,6 @@ const CodeTimeline = () => {
             </div>
           </div>
 
-          {/* Legend */}
           <div
             className={`mt-4 p-4 rounded-lg border ${
               darkMode
