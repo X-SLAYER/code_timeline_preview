@@ -1,23 +1,22 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Moon, Sun, Download } from "lucide-react";
 import html2canvas from "html2canvas";
-import { Switch } from "@radix-ui/react-switch";
 import AceEditor from "react-ace";
 
 import "ace-builds/src-noconflict/mode-dart";
 import "ace-builds/src-noconflict/theme-dracula";
+import "ace-builds/src-noconflict/theme-github";
 import "ace-builds/src-noconflict/ext-language_tools";
+import { Toggle } from "@radix-ui/react-toggle";
 
 const CodeTimeline = () => {
   const [codeInput, setCodeInput] = useState("");
   const [timelineData, setTimelineData] = useState([]);
-  const [darkMode, setDarkMode] = useState(true);
+  const [darkMode, setDarkMode] = useState(false);
   const timelineRef = useRef(null);
-
-  // i tried to match dracula theme colors
-  const elementTypes = {
+  const [elementTypes, setElementTypes] = useState({
     keyword: "#FF6B6B", // Soft Red
     class: "#4ECDC4", // Teal
     function: "#45B7D1", // Sky Blue
@@ -34,7 +33,7 @@ const CodeTimeline = () => {
     property: "#8BC34A", // Light Green
     space: "transparent",
     default: darkMode ? "#E0E0E0" : "#424242", // Light Grey / Dark Grey
-  };
+  });
 
   const keywords = [
     "class",
@@ -127,6 +126,7 @@ const CodeTimeline = () => {
 
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
+    localStorage.setItem("darkMode", !darkMode);
   };
 
   const exportImage = async () => {
@@ -156,6 +156,19 @@ const CodeTimeline = () => {
     }
   };
 
+  useEffect(() => {
+    const darkModeSetting = localStorage.getItem("darkMode");
+    const isDarkMode = darkModeSetting === "true";
+    setDarkMode(isDarkMode);
+
+    setElementTypes((prev) => ({
+      ...prev,
+      operator: !isDarkMode ? "#FFD93D" : "#FFD700",
+      default: !isDarkMode ? "#E0E0E0" : "#424242",
+    }));
+    setTimelineData(generateTimelineFromCode(codeInput));
+  }, [darkMode]);
+
   return (
     <div className={`p-6 h-screen ${darkMode ? "bg-gray-900" : "bg-gray-50"}`}>
       <div className="flex justify-between items-center mb-4">
@@ -168,17 +181,13 @@ const CodeTimeline = () => {
         </h2>
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-2">
-            <Sun
-              className={`h-4 w-4 ${
-                darkMode ? "text-gray-400" : "text-gray-600"
-              }`}
-            />
-            <Switch checked={darkMode} onCheckedChange={toggleDarkMode} />
-            <Moon
-              className={`h-4 w-4 ${
-                darkMode ? "text-gray-400" : "text-gray-600"
-              }`}
-            />
+            <Toggle onClick={toggleDarkMode}>
+              {darkMode ? (
+                <Sun className={`h-4 w-4 ${"text-gray-400"}`} />
+              ) : (
+                <Moon className={`h-4 w-4 ${"text-gray-600"}`} />
+              )}
+            </Toggle>
           </div>
           <button
             onClick={exportImage}
@@ -205,7 +214,7 @@ const CodeTimeline = () => {
         <div className="w-1/2 flex flex-col">
           <AceEditor
             placeholder="Paste your code here..."
-            theme="dracula"
+            theme={darkMode ? "dracula" : "github"}
             value={codeInput}
             mode={"dart"}
             width="100%"
@@ -216,11 +225,6 @@ const CodeTimeline = () => {
             setOptions={{
               fontSize: "16px",
             }}
-            className={
-              darkMode
-                ? "bg-gray-800 text-gray-300"
-                : "bg-white text-gray-800 border"
-            }
             onChange={handleInputChange}
           />
         </div>
