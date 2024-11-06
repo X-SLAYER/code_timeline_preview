@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
-import { Moon, Sun, Download } from "lucide-react";
+import React, { useState, useRef } from "react";
+import { Download ,Github} from "lucide-react";
 import html2canvas from "html2canvas";
 import AceEditor from "react-ace";
 
@@ -9,7 +9,6 @@ import "ace-builds/src-noconflict/mode-dart";
 import "ace-builds/src-noconflict/theme-dracula";
 import "ace-builds/src-noconflict/theme-github";
 import "ace-builds/src-noconflict/ext-language_tools";
-import { Toggle } from "@radix-ui/react-toggle";
 
 const CodeTimeline = () => {
   const [codeInput, setCodeInput] = useState("");
@@ -171,7 +170,7 @@ const CodeTimeline = () => {
 
   return (
     <div className={`p-6 h-screen ${darkMode ? "bg-gray-900" : "bg-gray-50"}`}>
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex items-center justify-between mb-4">
         <h2
           className={`text-xl font-semibold ${
             darkMode ? "text-white" : "text-gray-800"
@@ -189,6 +188,20 @@ const CodeTimeline = () => {
               )}
             </Toggle>
           </div> */}
+
+          <a
+            href="https://github.com/X-SLAYER/code_timeline_preview"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`p-2 rounded-full ${
+              darkMode
+                ? "bg-gray-700 hover:bg-gray-600 text-gray-200"
+                : "bg-gray-200 hover:bg-gray-300 text-gray-700"
+            }`}
+          >
+            <Github className="w-4 h-4" />
+          </a>
+
           <button
             onClick={exportImage}
             className={`p-2 rounded-full ${
@@ -197,7 +210,7 @@ const CodeTimeline = () => {
                 : "bg-gray-200 hover:bg-gray-300 text-gray-700"
             }`}
           >
-            <Download className="h-4 w-4" />
+            <Download className="w-4 h-4" />
           </button>
         </div>
       </div>
@@ -211,7 +224,7 @@ const CodeTimeline = () => {
       </h3>
 
       <div className="flex gap-6 h-[calc(100vh-8rem)]">
-        <div className="w-1/2 flex flex-col">
+        <div className="flex flex-col w-1/2">
           <AceEditor
             placeholder="Paste your code here..."
             theme={darkMode ? "dracula" : "github"}
@@ -229,7 +242,7 @@ const CodeTimeline = () => {
           />
         </div>
 
-        <div className="w-1/2 flex flex-col">
+        <div className="flex flex-col w-1/2">
           <div
             ref={timelineRef}
             className={`flex-1 overflow-auto rounded-lg p-4 border ${
@@ -280,7 +293,7 @@ const CodeTimeline = () => {
                   key !== "default" && (
                     <div key={key} className="flex items-center">
                       <div
-                        className="w-3 h-3 rounded mr-1"
+                        className="w-3 h-3 mr-1 rounded"
                         style={{ backgroundColor: color }}
                       />
                       <span
