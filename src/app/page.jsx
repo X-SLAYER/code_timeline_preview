@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useRef } from "react";
-import { Download ,Github} from "lucide-react";
+import React, { useState, useRef, useCallback } from "react";
+import { Download, Github, Sun, Moon } from "lucide-react";
 import html2canvas from "html2canvas";
 import AceEditor from "react-ace";
 
@@ -13,7 +13,12 @@ import "ace-builds/src-noconflict/ext-language_tools";
 const CodeTimeline = () => {
   const [codeInput, setCodeInput] = useState("");
   const [timelineData, setTimelineData] = useState([]);
-  const [darkMode, setDarkMode] = useState(true);
+  const [darkMode, setDarkMode] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("darkMode") !== "false";
+    }
+    return true;
+  });
   const timelineRef = useRef(null);
   const [elementTypes, setElementTypes] = useState({
     keyword: "#FF6B6B", // Soft Red
@@ -123,10 +128,13 @@ const CodeTimeline = () => {
     setTimelineData(generateTimelineFromCode(newCode));
   };
 
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-    localStorage.setItem("darkMode", !darkMode);
-  };
+  const toggleDarkMode = useCallback(() => {
+    setDarkMode(prev =>  {
+      const newValue = !prev;
+      localStorage.setItem("darkMode", newValue);
+      return newValue;
+    })
+  }, [])
 
   const exportImage = async () => {
     if (timelineRef.current) {
@@ -179,15 +187,16 @@ const CodeTimeline = () => {
           Code Timeline Visualizer
         </h2>
         <div className="flex items-center space-x-4">
-          {/* <div className="flex items-center space-x-2">
-            <Toggle onClick={toggleDarkMode}>
-              {darkMode ? (
-                <Sun className={`h-4 w-4 ${"text-gray-400"}`} />
-              ) : (
-                <Moon className={`h-4 w-4 ${"text-gray-600"}`} />
-              )}
-            </Toggle>
-          </div> */}
+          <button
+            onClick={toggleDarkMode}
+            className={`p-2 rounded-full ${
+              darkMode
+              ? "bg-gray-700 hover:bg-gray-600 text-gray-200"
+              : "bg-gray-200 hover:bg-gray-300 text-gray-700"
+            }`}
+          >
+            {darkMode?<Sun className="w-4 h-4"/>: <Moon className="w-4 h-4"/>}
+          </button>
 
           <a
             href="https://github.com/X-SLAYER/code_timeline_preview"
